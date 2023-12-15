@@ -66,4 +66,5 @@ async def check(request: Request, name:str, number:str):
 
 @app.websocket("/ws/v1/{name}/{number}")
 async def websocket_endpoint(websocket: WebSocket, name:str, number:str):
+    websocket.accept()
     games[number].add_Player(name=name, connection=websocket)

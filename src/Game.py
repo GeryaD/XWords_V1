@@ -80,7 +80,6 @@ class Game():
             self.letter_count[leter] -= 1
 
     async def add_Player(self, name: str, connection: WebSocket):
-        
         self.players += [Player(name=name, connection=connection, letters_limit=7)]
         await self.say_all_Players({'action': 'players_in_room', 'names': [player.name for player in self.players]})
         for player in self.players:

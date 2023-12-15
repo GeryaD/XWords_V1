@@ -13,7 +13,6 @@ class Player():
         self.name = name.upper()
         self.connection = connection
         self.letters_limit = letters_limit
-        self.connection.accept()
 
     async def add_score(self, score:int):
         if score>0:
