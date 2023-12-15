@@ -77,7 +77,21 @@ class Game():
                     await player.connection.send_json(message)
                 except websockets.exceptions.ConnectionClosed as e:
                     player.disconnected = True
+                    player.connection.close()
                     print(f"Connection closed with code {e.code}, reason: {e.reason}")
+                except websockets.exceptions.ProtocolError as t:
+                    player.disconnected = True
+                    player.connection.close()
+                    print(f"Ошибка сети {t}")
+                except websockets.exceptions.InvalidHandshake as q:
+                    player.disconnected = True
+                    player.connection.close()
+                    print(f"Ошибка сети {q}")
+                except websockets.exceptions.WebSocketException as p:
+                    player.disconnected = True
+                    player.connection.close()
+                    print(f"Ошибка ебать {p}")
+                
 
     def give_to_player_start_letters(self, player: Player):
         player.letters_on_hand += (random.choices(list(self.letter_count)))
@@ -85,8 +99,8 @@ class Game():
             self.letter_count[leter] -= 1
 
     async def add_Player(self, name: str, connection: WebSocket):
-        await asyncio.sleep(1) 
         self.players += [Player(name=name, connection=connection, letters_limit=7)]
+        await asyncio.sleep(1) 
         await self.say_all_Players({'action': 'players_in_room', 'names': [player.name for player in self.players]})
         for player in self.players:
             if player.name == name:
