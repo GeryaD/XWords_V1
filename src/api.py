@@ -63,11 +63,3 @@ async def check(request: Request, name:str, number:str):
                 return {'code': 400, 'message': f'This name ({name}) is already occupied in the room ({number})'}
             else: return {'code': 200, 'message': f'Yes, that name ({name}) is not in this room ({number}).'}
     else: return {'code': 400, 'message': f'There is no such room ({number})'}
-
-@app.websocket("/ws/v1/{name}/{number}")
-async def websocket_endpoint(websocket: WebSocket, name:str, number:str):
-    await websocket.accept()
-    await games[number].add_Player(name=name.upper())
-
-
-# uvicorn api:app --reload

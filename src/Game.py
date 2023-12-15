@@ -91,7 +91,6 @@ class Game():
                                                                                                                                     '':{'RGB':(255,241,184), 'HEX':'#fff1b8'},}})
                 await player.add_letters(self.get_letter(player.letters_limit))
                 
-
     async def waiting(self):
         start_time = asyncio.get_event_loop().time()
         while len(self.players) < self.num_of_players:
@@ -101,7 +100,7 @@ class Game():
                 break
             await asyncio.sleep(2)
         await self.run()
-        
+    
     async def run(self):
         if len(self.players) < self.num_of_players: raise Exception('The users never got together in 5 minutes')
         curent_id = 0
@@ -114,21 +113,28 @@ class Game():
                 self.say_all_Players({'action': 'end_the_game'})
                 break
             self.curent_player = self.players[curent_id]
-            await self.curent_player.connection.send_json({'action': 'your_move'})
             data = await self.curent_player.connection.receive_json()
             if data['action'] == 'pass': 
-                await self.curent_player.connection.send_json({'action': 'end_move'})
                 curent_id +=1 
-                if (curent_id > self.num_of_players): curent_id = 0
+                if (curent_id >= self.num_of_players): curent_id = 0
+                await self.curent_player.connection.send_json({'action': 'pass_move', 'new_curent_player':self.players[curent_id].name})
                 continue
             elif data['action'] == 'replace_letters':
-                replaceable: list[str] = data['action']
+                replaceable: list[str] = data['letters']
                 for leter in replaceable:
                     self.curent_player.letters_on_hand.remove(leter)
                     self.letter_count[leter] += 1
-                    pass
-                 
-                
-
-                
-                
+                new_letters = random.choices(list(self.letter_count.keys), k=len(replaceable))
+                for leter in new_letters:
+                    self.letter_count[leter] -=1
+                _id = curent_id
+                self.curent_player.letters_on_hand += new_letters
+                curent_id +=1 
+                if (curent_id >= self.num_of_players): curent_id = 0
+                await self.curent_player.connection.send_json({'action': 'replace_letters', 'letters_on_hand':self.players[_id].letters_on_hand,'new_curent_player':self.players[curent_id].name})
+                continue
+            elif data['action'] == 'make_move': pass
+            # Доделать эндпоинт "Сделать ход", если забуду все придуманные 
+            # алгоритмы после того как проснусь, то зайти в переписку к Димасу
+            # Реализовать проверку подключения игроков
+            # Реализовать логирование
