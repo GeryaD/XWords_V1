@@ -5,8 +5,9 @@ class Player():
     player_id: str
     name: str = ''
     score: int
-    letters_on_hand: list[str]
+    letters_on_hand: list[str] = []
     letters_limit: int
+    disconnected: bool = False
 
     def __init__(self, name:str, connection: WebSocket, letters_limit: int) -> None:
         self.name = name.upper()
@@ -18,12 +19,6 @@ class Player():
             self.score += score
         else: Exception('Начисляемые очки меньше нуля')
 
-    async def add_letters(self, letters: list[str]):
-        if len(self.letters_on_hand + letters) <= self.letters_limit:
-            self.letters_on_hand += letters
-            self.connection.send_json({'action':'add_letters', 'message': f'The letters were issued: {letters}', 'letters':letters})
-        else: raise Exception("Сумма добавляемых букв превышает лимит!")
-
     async def chenge_letter(self, old_latter: str, new_latter:str):
         if old_latter in self.letters_on_hand:
             self.letters_on_hand.remove(old_latter)
@@ -32,6 +27,3 @@ class Player():
 
     async def set_connection(self, connection):
         self.connection = connection
-
-    async def ws_get_letter(self,):
-        self.connection.send_json({'action':'get_letters', 'letters':self.letters_on_hand})

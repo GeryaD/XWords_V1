@@ -35,5 +35,5 @@ class Dictionary:
         return (self.fieldTypes[fieltType].letterCount.copy(), self.fieldTypes[fieltType].letterScore.copy(), )
 
 
-# dict = Dictionary("src/dict_ru_v3.json")
+# dict = Dictionary("dict_ru_v3.json")
 # print(dict.getBag(FieldType.MEDIUM))

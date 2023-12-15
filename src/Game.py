@@ -1,6 +1,7 @@
 from Player import Player
 from enum import Enum
 from fastapi.websockets import WebSocket
+import websockets.exceptions
 from Dictionary import FieldType, Dictionary
 import asyncio
 from typing import List, Dict
@@ -69,27 +70,26 @@ class Game():
         self.room_number = room_number
         self.passes_limit = num_of_players*2
 
-    def get_letter(self, num: int):
-        letters_list = random.choices(list(self.letter_count.keys()), k=num)
-        for letter in letters_list:
-            self.letter_count[letter] -= 1
-        return letters_list
-
     async def say_all_Players(self, message:Dict):
         for player in self.players:
             await player.connection.send_json(message)
+
+    def give_to_player_start_letters(self, player: Player):
+        player.letters_on_hand += (random.choices(list(self.letter_count.keys)))
+        for leter in player.letters_on_hand:
+            self.letter_count[leter] -= 1
 
     async def add_Player(self, name: str, connection: WebSocket):
         self.players.append(Player(name=name, connection=connection, letters_limit=7))
         await self.say_all_Players({'action': 'players_in_room', 'names': [player.name for player in self.players]})
         for player in self.players:
             if player.name == name:
-                await player.connection.send_json({'action': 'get_field_mask', 'size':(9,9), 'field_mask':self.multiplier_field, 'transcription':{'r':{'RGB':(237,28,36), 'HEX':'#ed1c24'},
+                self.give_to_player_start_letters(player=player)
+                await player.connection.send_json({'action': 'init_game', 'size':(9,9), 'field_mask':self.multiplier_field, 'transcription':{'r':{'RGB':(237,28,36), 'HEX':'#ed1c24'},
                                                                                                                                     'g':{'RGB':(37,177,76), 'HEX':'#22b14c'},
                                                                                                                                     'b':{'RGB':(0,162,232), 'HEX':'#00a2e8'},
                                                                                                                                     'o':{'RGB':(255,127,29), 'HEX':'#ff7f27'},
-                                                                                                                                    '':{'RGB':(255,241,184), 'HEX':'#fff1b8'},}})
-                await player.add_letters(self.get_letter(player.letters_limit))
+                                                                                                                                    '':{'RGB':(255,241,184), 'HEX':'#fff1b8'},}, 'leters_score':self.letter_score, 'letters_on_hand':player.letters_on_hand},)
                 
     async def waiting(self):
         start_time = asyncio.get_event_loop().time()
@@ -113,7 +113,13 @@ class Game():
                 self.say_all_Players({'action': 'end_the_game'})
                 break
             self.curent_player = self.players[curent_id]
-            data = await self.curent_player.connection.receive_json()
+            try:
+                data = await self.curent_player.connection.receive_json()
+            except websockets.exceptions.ConnectionClosed as e:
+                self.curent_player.disconnected = True
+                self.say_all_Players({'action': 'end_the_game', 'message': f'Игрок {self.curent_player.name} покинул игру!', 'scors': {player.name: player.score for player in self.players}})
+                print(f"Connection closed with code {e.code}, reason: {e.reason}")
+                break
             if data['action'] == 'pass': 
                 curent_id +=1 
                 if (curent_id >= self.num_of_players): curent_id = 0
@@ -133,8 +139,8 @@ class Game():
                 if (curent_id >= self.num_of_players): curent_id = 0
                 await self.curent_player.connection.send_json({'action': 'replace_letters', 'letters_on_hand':self.players[_id].letters_on_hand,'new_curent_player':self.players[curent_id].name})
                 continue
-            elif data['action'] == 'make_move': pass
+            elif data['action'] == 'make_move': 
+                pass
             # Доделать эндпоинт "Сделать ход", если забуду все придуманные 
             # алгоритмы после того как проснусь, то зайти в переписку к Димасу
-            # Реализовать проверку подключения игроков
             # Реализовать логирование
