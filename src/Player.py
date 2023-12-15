@@ -10,7 +10,7 @@ class Player():
     disconnected: bool = False
 
     def __init__(self, name:str, connection: WebSocket, letters_limit: int) -> None:
-        self.name = name.upper()
+        self.name = name
         self.connection = connection
         self.letters_limit = letters_limit
 

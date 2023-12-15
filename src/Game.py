@@ -94,7 +94,6 @@ class Game():
     async def waiting(self):
         start_time = asyncio.get_event_loop().time()
         while len(self.players) < self.num_of_players:
-            print(asyncio.get_event_loop().time() - start_time)
             if (asyncio.get_event_loop().time() - start_time) > 300:
                 self.dead = True
                 break

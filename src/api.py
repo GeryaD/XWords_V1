@@ -54,17 +54,17 @@ async def create_room(request: Request, back_task:BackgroundTasks, num_of_player
 
 @app.get('/api/v1/check/{name}/{number}')
 async def check(request: Request, name:str, number:str):
-    print(games)
     ch=check_room_number(number)
     if ch == True:
         if len(games[number].players) == 0: return {'code': 200, 'message': f'Yes, that name ({name}) is not in this room ({number}).'}
         for player in games[number].players:
-            if name.upper() in player.name:
+            if name in player.name:
                 return {'code': 400, 'message': f'This name ({name}) is already occupied in the room ({number})'}
             else: return {'code': 200, 'message': f'Yes, that name ({name}) is not in this room ({number}).'}
     else: return {'code': 400, 'message': f'There is no such room ({number})'}
 
 @app.websocket("/ws/v1/{name}/{number}")
 async def websocket_endpoint(websocket: WebSocket, name:str, number:str):
+    print(type(name))
     await websocket.accept()
-    await games[number].add_Player(name=name.upper, connection=websocket)
+    await games[number].add_Player(name=name, connection=websocket)
