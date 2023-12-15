@@ -85,6 +85,7 @@ class Game():
             self.letter_count[leter] -= 1
 
     async def add_Player(self, name: str, connection: WebSocket):
+        await asyncio.sleep(1) 
         self.players += [Player(name=name, connection=connection, letters_limit=7)]
         await self.say_all_Players({'action': 'players_in_room', 'names': [player.name for player in self.players]})
         for player in self.players:
@@ -126,7 +127,7 @@ class Game():
                 await self.say_all_Players({'action': 'end_the_game', 'message': f'Игрок {self.curent_player.name} покинул игру!', 'scors': {player.name: player.score for player in self.players}})
                 print(f"Connection closed with code {e.code}, reason: {e.reason}")
                 break
-            if data['action'] == 'pass': 
+            if data['action'] == 'pass':
                 curent_id +=1 
                 if (curent_id >= self.num_of_players): curent_id = 0
                 await self.curent_player.connection.send_json({'action': 'pass_move', 'new_curent_player':self.players[curent_id].name})
