@@ -75,7 +75,7 @@ class Game():
             await player.connection.send_json(message)
 
     def give_to_player_start_letters(self, player: Player):
-        player.letters_on_hand += (random.choices(list(self.letter_count.keys)))
+        player.letters_on_hand += (random.choices(list(self.letter_count)))
         for leter in player.letters_on_hand:
             self.letter_count[leter] -= 1
 
@@ -131,7 +131,7 @@ class Game():
                 for leter in replaceable:
                     self.curent_player.letters_on_hand.remove(leter)
                     self.letter_count[leter] += 1
-                new_letters = random.choices(list(self.letter_count.keys), k=len(replaceable))
+                new_letters = random.choices(list(self.letter_count), k=len(replaceable))
                 for leter in new_letters:
                     self.letter_count[leter] -=1
                 _id = curent_id
