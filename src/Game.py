@@ -106,6 +106,8 @@ class Game():
         curent_id = 0
         self.curent_player = self.players[curent_id]
         started = True
+        for player in self.players:
+            player.connection.accept()
         while started:
             if self.passes == self.passes_limit: 
                 self.dead = True
