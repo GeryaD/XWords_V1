@@ -72,7 +72,12 @@ class Game():
 
     async def say_all_Players(self, message:Dict):
         for player in self.players:
-            await player.connection.send_json(message)
+            if not player.disconnected:
+                try:
+                    await player.connection.send_json(message)
+                except websockets.exceptions.ConnectionClosed as e:
+                    player.disconnected = True
+                    print(f"Connection closed with code {e.code}, reason: {e.reason}")
 
     def give_to_player_start_letters(self, player: Player):
         player.letters_on_hand += (random.choices(list(self.letter_count)))
