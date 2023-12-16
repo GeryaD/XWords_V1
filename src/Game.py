@@ -96,7 +96,7 @@ class Game():
                 
 
     def give_to_player_start_letters(self, player: Player):
-        player.letters_on_hand += (random.choices(list(self.letter_count.keys()), 7))
+        player.letters_on_hand += (random.choices(list(self.letter_count.keys()), k=7))
         for leter in player.letters_on_hand:
             self.letter_count[leter] -= 1
 
