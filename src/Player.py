@@ -14,16 +14,13 @@ class Player():
         self.connection = connection
         self.letters_limit = letters_limit
 
-    async def add_score(self, score:int):
+    def add_score(self, score:int):
         if score>0:
             self.score += score
         else: Exception('Начисляемые очки меньше нуля')
 
-    async def chenge_letter(self, old_latter: str, new_latter:str):
+    def chenge_letter(self, old_latter: str, new_latter:str):
         if old_latter in self.letters_on_hand:
             self.letters_on_hand.remove(old_latter)
             self.letters_on_hand.append(new_latter)
         else: raise Exception('Буква, которую выхотите поменять не существует у игрока на руках!')
-
-    async def set_connection(self, connection):
-        self.connection = connection

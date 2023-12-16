@@ -70,31 +70,33 @@ class Game():
         self.room_number = room_number
         self.passes_limit = num_of_players*2
 
-    async def say_all_Players(self, message:Dict):
-        for player in self.players:
-            if not player.disconnected:
+    async def say_all_Players(self, message):
+        for i in range(len(self.players)):
+            await asyncio.sleep(1)
+            if not self.players[i].disconnected:
                 try:
-                    await player.connection.send_json(message)
+                    if self.players[i].connection.client_state == websockets.protocol.OPEN:
+                        await self.players[i].connection.send_json(message)
                 except websockets.exceptions.ConnectionClosed as e:
-                    player.disconnected = True
-                    player.connection.close()
+                    self.players[i].disconnected = True
+                    self.players[i].connection.close()
                     print(f"Connection closed with code {e.code}, reason: {e.reason}")
                 except websockets.exceptions.ProtocolError as t:
-                    player.disconnected = True
-                    player.connection.close()
+                    self.players[i].disconnected = True
+                    self.players[i].connection.close()
                     print(f"Ошибка сети {t}")
                 except websockets.exceptions.InvalidHandshake as q:
-                    player.disconnected = True
-                    player.connection.close()
+                    self.players[i].disconnected = True
+                    self.players[i].connection.close()
                     print(f"Ошибка сети {q}")
                 except websockets.exceptions.WebSocketException as p:
-                    player.disconnected = True
-                    player.connection.close()
+                    self.players[i].disconnected = True
+                    self.players[i].connection.close()
                     print(f"Ошибка ебать {p}")
                 
 
     def give_to_player_start_letters(self, player: Player):
-        player.letters_on_hand += (random.choices(list(self.letter_count)))
+        player.letters_on_hand += (random.choices(list(self.letter_count.keys()), 7))
         for leter in player.letters_on_hand:
             self.letter_count[leter] -= 1
 
@@ -117,7 +119,7 @@ class Game():
             if (asyncio.get_event_loop().time() - start_time) > 300:
                 self.dead = True
                 break
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
         await self.run()
     
     async def run(self):
@@ -135,7 +137,7 @@ class Game():
                 break
             self.curent_player = self.players[curent_id]
             try:
-                data = await self.curent_player.connection.receive_json()
+                data = await self.players[curent_id].connection.receive_json()
             except websockets.exceptions.ConnectionClosed as e:
                 self.curent_player.disconnected = True
                 await self.say_all_Players({'action': 'end_the_game', 'message': f'Игрок {self.curent_player.name} покинул игру!', 'scors': {player.name: player.score for player in self.players}})
@@ -189,3 +191,5 @@ class Game():
             # Доделать эндпоинт "Сделать ход", если забуду все придуманные 
             # алгоритмы после того как проснусь, то зайти в переписку к Димасу
             # Реализовать логирование
+            # cd .\XWords_V1\src\ 
+            # uvicorn api:app --reload
