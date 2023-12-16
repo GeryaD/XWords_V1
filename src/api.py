@@ -71,11 +71,11 @@ async def check(request: Request, name:str, number:str):
 async def websocket_endpoint(websocket: WebSocket, name:str, number:str):
     if games[number]['game'] == None:
         games[number]['game'] = Game(room_number=number, num_of_players=games[number]['num_of_players'], bag=ru_bag)
-        await asyncio.sleep(0.5)
+        ### await asyncio.sleep(0.5)
         await websocket.accept()
         await games[number]['game'].add_Player(name=name, connection=websocket)
         await games[number]['game'].waiting()
-    await asyncio.sleep(0.5)
+    ### await asyncio.sleep(0.5)
     await websocket.accept()
     await games[number]['game'].add_Player(name=name, connection=websocket)
 

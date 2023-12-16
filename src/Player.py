@@ -24,3 +24,6 @@ class Player():
             self.letters_on_hand.remove(old_latter)
             self.letters_on_hand.append(new_latter)
         else: raise Exception('Буква, которую выхотите поменять не существует у игрока на руках!')
+
+    def set_letters_on_hand(self, letters:list[str]):
+        self.letters_on_hand = letters
