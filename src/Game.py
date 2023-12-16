@@ -72,7 +72,7 @@ class Game():
 
     async def say_all_Players(self, message):
         for i in range(len(self.players)):
-            await asyncio.sleep(1)
+            # await asyncio.sleep(0.5)
             if not self.players[i].disconnected:
                 try:
                     if self.players[i].connection.client_state == websockets.protocol.OPEN:
@@ -119,10 +119,11 @@ class Game():
             if (asyncio.get_event_loop().time() - start_time) > 300:
                 self.dead = True
                 break
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.3) 
         await self.run()
     
     async def run(self):
+        await asyncio.sleep(1)    
         if len(self.players) < self.num_of_players: raise Exception('The users never got together in 5 minutes')
         curent_id = 0
         self.curent_player = self.players[curent_id]
@@ -130,6 +131,7 @@ class Game():
         # for player in self.players:
         #     await player.connection.accept()
         while started:
+            await asyncio.sleep(1)
             if self.passes == self.passes_limit: 
                 self.dead = True
                 started = False
@@ -137,34 +139,35 @@ class Game():
                 break
             self.curent_player = self.players[curent_id]
             try:
-                data = await self.players[curent_id].connection.receive_json()
+                # if self.players[curent_id].connection.client_state == websockets.protocol.OPEN:
+                    data = await self.players[curent_id].connection.receive_json()
             except websockets.exceptions.ConnectionClosed as e:
-                self.curent_player.disconnected = True
-                await self.say_all_Players({'action': 'end_the_game', 'message': f'Игрок {self.curent_player.name} покинул игру!', 'scors': {player.name: player.score for player in self.players}})
+                self.players[curent_id].disconnected = True
+                await self.say_all_Players({'action': 'end_the_game', 'message': f'Игрок {self.players[curent_id].name} покинул игру!', 'scors': {player.name: player.score for player in self.players}})
                 print(f"Connection closed with code {e.code}, reason: {e.reason}")
                 break
             if data['action'] == 'pass':
                 curent_id +=1 
                 if (curent_id >= self.num_of_players): curent_id = 0
-                await self.curent_player.connection.send_json({'action': 'pass_move', 'new_curent_player':self.players[curent_id].name})
+                await self.players[curent_id].connection.send_json({'action': 'pass_move', 'new_curent_player':self.players[curent_id].name})
                 continue
             elif data['action'] == 'replace_letters':
                 replaceable: list[str] = data['letters']
                 for leter in replaceable:
-                    self.curent_player.letters_on_hand.remove(leter)
+                    self.players[curent_id].letters_on_hand.remove(leter)
                     self.letter_count[leter] += 1
                 new_letters = random.choices(list(self.letter_count), k=len(replaceable))
                 for leter in new_letters:
                     self.letter_count[leter] -=1
                 _id = curent_id
-                self.curent_player.letters_on_hand += new_letters
+                self.players[curent_id].letters_on_hand += new_letters
                 curent_id +=1 
                 if (curent_id >= self.num_of_players): curent_id = 0
-                await self.curent_player.connection.send_json({'action': 'replace_letters', 'letters_on_hand':self.players[_id].letters_on_hand,'new_curent_player':self.players[curent_id].name})
+                await self.players[curent_id].connection.send_json({'action': 'replace_letters', 'letters_on_hand':self.players[_id].letters_on_hand,'new_curent_player':self.players[curent_id].name})
                 continue
             elif data['action'] == 'make_move': 
                 if data['finaly' == True]:
-                    await self.curent_player.connection.send_json({'action':'get_letters', 'letters_on_hand':self.curent_player.letters_on_hand})
+                    await self.players[curent_id].connection.send_json({'action':'get_letters', 'letters_on_hand':self.players[curent_id].letters_on_hand})
                     curent_id +=1 
                     if (curent_id >= self.num_of_players): curent_id = 0
                     await self.say_all_Players({'action': 'player_moved', 'scores':{player.name:player.score for player in self.players}, 'field':[['','','','','','','','','',],
@@ -179,7 +182,7 @@ class Game():
 'new_curent_player': self.players[curent_id]})
                     continue
                 else:
-                    await self.curent_player.connection.send_json(random.choice([{'action':'calculated_points', 'words_scores':{'камар': 20, 'рог':7}}, {'action':'no_such_word', 'field':[['','','','','','','','','',],
+                    await self.players[curent_id].connection.send_json(random.choice([{'action':'calculated_points', 'words_scores':{'камар': 20, 'рог':7}}, {'action':'no_such_word', 'field':[['','','','','','','','','',],
 ['','','','','','','','','',],
 ['','','','','','','','','',],
 ['','','','','','','','','',],
@@ -187,7 +190,7 @@ class Game():
 ['','','','','','','','','',],
 ['','','','','','','','','',],
 ['','','','','','','','','',],
-['','','','','','','','','',],], 'letters_on_hand': self.curent_player.letters_on_hand}]))
+['','','','','','','','','',],], 'letters_on_hand': self.players[curent_id].letters_on_hand}]))
             # Доделать эндпоинт "Сделать ход", если забуду все придуманные 
             # алгоритмы после того как проснусь, то зайти в переписку к Димасу
             # Реализовать логирование
