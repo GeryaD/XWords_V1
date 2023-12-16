@@ -105,7 +105,7 @@ class Game():
         await asyncio.sleep(1) 
         await self.say_all_Players({'action': 'players_in_room', 'names': [player.name for player in self.players]})
         for player in self.players:
-            if player.name == name:
+            if player.name == name and len(player.letters_on_hand) == 0:
                 self.give_to_player_start_letters(player=player)
                 await player.connection.send_json({'action': 'init_game', 'size':(9,9), 'field_mask':self.multiplier_field, 'transcription':{'r':{'RGB':(237,28,36), 'HEX':'#ed1c24'},
                                                                                                                                     'g':{'RGB':(37,177,76), 'HEX':'#22b14c'},
@@ -132,12 +132,14 @@ class Game():
         #     await player.connection.accept()
         while started:
             await asyncio.sleep(1)
+            
             if self.passes == self.passes_limit: 
                 self.dead = True
                 started = False
                 await self.say_all_Players({'action': 'end_the_game'})
                 break
             self.curent_player = self.players[curent_id]
+            self.say_all_Players({'action': 'start_game', 'curent_player':self.curent_player.name})
             try:
                 # if self.players[curent_id].connection.client_state == websockets.protocol.OPEN:
                     data = await self.players[curent_id].connection.receive_json()
