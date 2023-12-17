@@ -70,6 +70,8 @@ class Game():
         self.room_number = room_number
         self.passes_limit = num_of_players*2
 
+    
+
     async def say_all_Players(self, message):
         for i in range(len(self.players)):
             ## await asyncio.sleep(0.5)
@@ -102,9 +104,8 @@ class Game():
 
     async def add_Player(self, name: str, connection: WebSocket):
         self.players.append(Player(name=name, connection=connection, letters_limit=7))
-        await asyncio.sleep(1)
+        # await asyncio.sleep(0.5)
         for player in self.players:
-            print(player.name, player.letters_on_hand)
             if player.name == name and len(player.letters_on_hand) == 0:
                 self.give_to_player_start_letters(player=player)
                 await player.connection.send_json({'action': 'init_game', 'size':(9,9), 'field_mask':self.multiplier_field, 'transcription':{'r':{'RGB':(237,28,36), 'HEX':'#ed1c24'},
@@ -121,7 +122,8 @@ class Game():
             if (asyncio.get_event_loop().time() - start_time) > 300:
                 self.dead = True
                 break
-            await asyncio.sleep(3) 
+            await asyncio.sleep(0.1)
+        await asyncio.sleep(3)
         await self.run()
     
     async def run(self):
@@ -132,19 +134,15 @@ class Game():
         started = True
         # for player in self.players:
         #     await player.connection.accept()
+        for player in self.players:
+                await player.connection.send_json({'action': 'start_game', 'curent_player':f'Dima'})
         while started:
-            print(self.players)
             if self.passes == self.passes_limit: 
                 self.dead = True
                 started = False
-                await asyncio.sleep(0.3) 
                 for player in self.players:
                     await player.connection.send_json({'action': 'end_the_game'})
-                break
-            await asyncio.sleep(0.4)
-            for player in self.players:
-                await player.connection.send_json({'action': 'start_game', 'curent_player':f'{self.players[curent_id].name}'})
-            
+                break            
             try:
                 # if self.players[curent_id].connection.client_state == websockets.protocol.OPEN:
                     data = await self.players[curent_id].connection.receive_json()
@@ -211,3 +209,4 @@ class Game():
             # Реализовать логирование
             # cd .\XWords_V1\src\ 
             # uvicorn api:app --reload
+               
